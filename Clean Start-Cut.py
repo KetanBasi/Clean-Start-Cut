@@ -1,17 +1,7 @@
 import os, sys, configparser, csv, itertools
-from fuzzywuzzy import fuzz
 
 # ANCHOR: Aditional lib
-# try:
-#     import ==lib== as ==lib==
-# except ModuleNotFoundError:
-#     _module = '==lib name=='
-#     os.system(f'cmd /c "pip install {_module}"')
-#     try:
-#         import ==lib== as ==lib==
-#     except ModuleNotFoundError:
-#         print(f'Module Error: Couldn\'t load install module: {_module}')
-#         exit()
+from fuzzywuzzy import fuzz
 
 # ANCHOR: Variables
 cfg = configparser.ConfigParser()
@@ -22,18 +12,22 @@ cfg.read('config.ini')
 inTest = cfg.getboolean('Main', 'inTest')
 
 # Working location
-Database = DBSample
 if inTest:
     StartDir = cfg.get('Main', 'StartTestDir')
+    Database = DBSample
 else:
     StartDir = cfg.get('Main', 'StartMenuDir')
 
 DBStyle = cfg.getint('Main', 'DBStyle')
 DBFileName = cfg.get('Main', 'DBFile')
-
+# ! Untested
+# TODO: Add .csv & cusom style support
 if DBStyle == 0:
     with open(DBFileName, 'r') as _DBFile:
         DBFile = _DBFile
+
+threshold = cfg.getfloat('Main', 'Sensitivity')
+maxDepth = cfg.getint('Main', 'MaxDepth')
 
 conFil = [
 'help',
@@ -127,34 +121,38 @@ def findTarget(match, options):
         else:
             return result[-1]
 
-
-
-            
-    
-
 # ANCHOR: Main
-os.chdir('test_dir/Start Menu')
+# os.chdir('test_dir/Start Menu')
+os.chdir(StartDir)
 filesOnCurrentDir = os.listdir()
 
 selectedFiles = [ (Database['Allowed'][program]['FolderName'], Database['Allowed'][program]['Target']) for program in Database['Allowed'] ]
-selectedFiles
+# ? I forgot what this line used to be
+# selectedFiles
 
 filterFiles = Database['SysFile']['Files']
 _Unallowed = [Database['SysFile']['Directories']] + [[Database['Unallowed']['NoGroup'][i] for i in Database['Unallowed']['NoGroup']]] + [Database['Unallowed']['Groups'][i] for i in Database['Unallowed']['Groups']]
 Unallowed = list(set(itertools.chain.from_iterable(_Unallowed)))
 
+try: Unallowed.remove('')
+except ValueError: pass
+
 filters = set(filterFiles + Unallowed + ['Programs'])
 
 filesOnCurrentDir = set(filesOnCurrentDir) - filters
 
-for item in filesOnCurrentDir:
-    if item.endswith('.lnk'):
-        os.rename(item, f'Programs/{item}')
-
+# ? Move any shortcut that placed outside 'Programs' folder into it
+# * V1
+# for item in filesOnCurrentDir:
+#     if item.endswith('.lnk'):
+#         os.rename(item, f'Programs/{item}')
+# * V2
 moveAll(filesOnCurrentDir, move_up=False)
 
 os.chdir('Programs')
 
+# TODO: Find out how to extract shortcut to "Start Menu/Programs/"
+# ? Use Allowed, Unallowed, SysFile, String Match, and Confidence rule
 
 # ANCHOR: =========
 
