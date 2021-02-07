@@ -1,4 +1,5 @@
 import os, sys, configparser, csv, itertools
+from fuzzywuzzy import fuzz
 
 # ANCHOR: Aditional lib
 # try:
@@ -34,6 +35,24 @@ if DBStyle == 0:
     with open(DBFileName, 'r') as _DBFile:
         DBFile = _DBFile
 
+conFil = [
+'help',
+'uninstall',
+'homepage',
+'edit',
+'config',
+'eula',
+'faq',
+'readme',
+'release note',
+'website',
+'documentation',
+'visit',
+'license',
+'manual',
+'docs'
+]
+
 # ANCHOR: Functions
 def moveShortCut(file, location, ext='.lnk', move_up=True):
     try:
@@ -63,6 +82,55 @@ def moveAll(files, move_up=True):
             finally:
                 print()
 
+def findMatch(match, options):
+    results = []
+    for item in options:
+        print(f'Matching \'{match}\' with \'{item}\'')
+        ratio = fuzz.ratio(match, item)
+        partialRatio = fuzz.partial_ratio(match, item)
+        tokenSortRatio = fuzz.token_sort_ratio(match, item)
+        tokenSetRatio = fuzz.token_set_ratio(match, item)
+        score1 = 0
+        for j in [ratio, partialRatio, tokenSortRatio, tokenSetRatio]:
+            if j >= threshold: score1 += 1
+        score2 = (ratio + tokenSortRatio) / 2
+        results.append( (item, score1, score2) )
+        print(f'Score 1: {score1}')
+        print(f'Score 2: {score2}')
+    score2 = [results[i][2] for i in range(len(results))]
+    highest = results[score2.index(max(score2))]
+    print(score2)
+    print(f'Highest: {highest[0]}\n\tScore:{highest[2]}')
+    return highest[0]
+
+def findTarget(match, options):
+    result = []
+    confidence = []
+    for i in range(len(options)):
+        _result = findMatch(match, options)
+        _confidence = 100
+        for e in conFil:
+            if e in _result.lower():
+                _confidence -= len(conFil) + 5
+        result.append(_result)
+        confidence.append(_confidence)
+        print(f'{_result}: {_confidence}')
+        if _confidence < 100:
+            if len(result) > 1 and confidence[-2] < confidence[-1]:
+                return result[-1]
+            elif len(result) > 1 and confidence[-2] > confidence[-1]:
+                return result[-2]
+            else:
+                confidence.append(_confidence)
+                options.remove(_result)
+                continue
+        else:
+            return result[-1]
+
+
+
+            
+    
 
 # ANCHOR: Main
 os.chdir('test_dir/Start Menu')
