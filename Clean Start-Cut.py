@@ -48,6 +48,19 @@ conFil = [
 ]
 
 # ANCHOR: Functions
+def getFilteredList(getFolderNotFile=True):
+    result = []
+    for item in filesOnCurrentDir:
+        try:
+            os.chdir(item)
+            if getFolderNotFile:
+                result.append(item)
+            os.chdir('..')
+        except NotADirectoryError:
+            if not getFolderNotFile:
+                result.append(item)
+    return result
+
 def moveShortCut(file, location, ext='.lnk', move_up=True):
     try:
         if file.endswith(ext) and move_up:
@@ -59,6 +72,8 @@ def moveShortCut(file, location, ext='.lnk', move_up=True):
         return False
 
 def moveAll(files, move_up=True):
+    # *
+    # *
     if not move_up and os.getcwd().endswith('Start Menu'):
         target = 'Programs'
     elif move_up and '\\Start Menu\\Programs\\' in os.getcwd():
@@ -69,12 +84,8 @@ def moveAll(files, move_up=True):
         if not move_up:
             moveShortCut(item, location=target, move_up=move_up)
         else:
-            try:
-                os.chdir(item)
-            except NotADirectoryError:
-                continue
-            finally:
-                print()
+            folders = getFilteredList()
+            
 
 def findMatch(match, options):
     results = []
@@ -121,25 +132,37 @@ def findTarget(match, options):
         else:
             return result[-1]
 
+def getFileFolderList(dir='.'):
+    os.chdir(dir)
+    filesOnCurrentDir = os.listdir()
+    selectedFiles = [ (Database['Allowed'][program]['FolderName'], Database['Allowed'][program]['Target']) for program in Database['Allowed'] ]
+    filterFiles = Database['SysFile']['Files']
+    _Unallowed = [Database['SysFile']['Directories']] + [[Database['Unallowed']['NoGroup'][i] for i in Database['Unallowed']['NoGroup']]] + [Database['Unallowed']['Groups'][i] for i in Database['Unallowed']['Groups']]
+    Unallowed = list(set(itertools.chain.from_iterable(_Unallowed)))
+    try:
+        Unallowed.remove('')
+    except ValueError:
+        pass
+    filters = set(filterFiles + Unallowed + ['Programs'])
+    return set(filesOnCurrentDir) - filters
+
+
 # ANCHOR: Main
 # os.chdir('test_dir/Start Menu')
 os.chdir(StartDir)
-filesOnCurrentDir = os.listdir()
 
-selectedFiles = [ (Database['Allowed'][program]['FolderName'], Database['Allowed'][program]['Target']) for program in Database['Allowed'] ]
-# ? I forgot what this line used to be
-# selectedFiles
-
-filterFiles = Database['SysFile']['Files']
-_Unallowed = [Database['SysFile']['Directories']] + [[Database['Unallowed']['NoGroup'][i] for i in Database['Unallowed']['NoGroup']]] + [Database['Unallowed']['Groups'][i] for i in Database['Unallowed']['Groups']]
-Unallowed = list(set(itertools.chain.from_iterable(_Unallowed)))
-
-try: Unallowed.remove('')
-except ValueError: pass
-
-filters = set(filterFiles + Unallowed + ['Programs'])
-
-filesOnCurrentDir = set(filesOnCurrentDir) - filters
+# * V1
+# filesOnCurrentDir = os.listdir()
+# selectedFiles = [ (Database['Allowed'][program]['FolderName'], Database['Allowed'][program]['Target']) for program in Database['Allowed'] ]
+# filterFiles = Database['SysFile']['Files']
+# _Unallowed = [Database['SysFile']['Directories']] + [[Database['Unallowed']['NoGroup'][i] for i in Database['Unallowed']['NoGroup']]] + [Database['Unallowed']['Groups'][i] for i in Database['Unallowed']['Groups']]
+# Unallowed = list(set(itertools.chain.from_iterable(_Unallowed)))
+# try: Unallowed.remove('')
+# except ValueError: pass
+# filters = set(filterFiles + Unallowed + ['Programs'])
+# filesOnCurrentDir = set(filesOnCurrentDir) - filters
+# * V2
+filesOnCurrentDir = getFileFolderList()
 
 # ? Move any shortcut that placed outside 'Programs' folder into it
 # * V1
@@ -150,6 +173,8 @@ filesOnCurrentDir = set(filesOnCurrentDir) - filters
 moveAll(filesOnCurrentDir, move_up=False)
 
 os.chdir('Programs')
+
+filesOnCurrentDir = getFileFolderList()
 
 # TODO: Find out how to extract shortcut to "Start Menu/Programs/"
 # ? Use Allowed, Unallowed, SysFile, String Match, and Confidence rule
@@ -317,7 +342,7 @@ if __name__ == '__main__':
         },
 
         'SysFile': {                            # ? System Shortcut should be ignored
-            'Files': ['desktop.ini'],           # ? File name must be followed by their extension
+            'Files': ['desktop.ini', 'config.ini'],           # ? File name must be followed by their extension
             'Directories': [                    # ? Folder name only
                 'Accessibility', 'Accessories', 'Administrative Tools', 'Maintenance', 'Startup',
                 'Windows Accessories', 'Windows Administrative Tools', 'Windows Ease of Access',
