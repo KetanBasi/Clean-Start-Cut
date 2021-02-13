@@ -1,4 +1,4 @@
-import os, re, configparser, itertools, shutil
+import os, ast, re, configparser, itertools, shutil
 
 # ANCHOR: Aditional lib
 from fuzzywuzzy import fuzz
@@ -7,8 +7,6 @@ from fuzzywuzzy import fuzz
 cfg = configparser.ConfigParser()
 cfg.read('config.ini')
 
-# True: use DBSample
-# False: use DBFileName to get DB(s)
 inTest = cfg.getboolean('Main', 'inTest')
 
 # Working location
@@ -18,179 +16,10 @@ else:
     StartDir = cfg.get('Main', 'StartMenuDir')
 
 DBFileName = cfg.get('Main', 'DBFile')
-
-# TODO: Read database file
-
 threshold = cfg.getfloat('Main', 'Sensitivity')
 maxDepth = cfg.getint('Main', 'MaxDepth')
 
 filesOnCurrentDir = []
-Database = {
-
-    'Allowed': {
-        # ? <Name>: {
-        # ?     'FolderName': <Folder name>
-        # ?     'Target': <Target(s)>
-        # ? }
-        'GDrive': {
-            'FolderName': 'Backup and Sync from Google',
-            'Target': ['Backup and Sync from Google.lnk', 'Google Docs.lnk', 'Google Sheets.lnk', 'Google Slides.lnk']
-        },
-        'CCleaner': {
-            'FolderName': 'CCleaner',
-            'Target': ['CCleaner.lnk']
-        },
-        'Core Temp': {
-            'FolderName': 'Core Temp',
-            'Target': ['Core Temp.lnk']
-        },
-        'Dead Cells The Bad Seed': {
-            'FolderName': 'Dead Cells The Bad Seed',
-            'Target': ['Dead Cells The Bad Seed.lnk']
-        },
-        'Defraggler': {
-            'FolderName': 'Defraggler',
-            'Target': ['Defraggler.lnk']
-        },
-        'Git': {
-            'FolderName': 'Git',
-            'Target': ['Git Bash.lnk', 'Git CMD.lnk', 'Git GUI.lnk']
-        },
-        'Glary Utilities 5': {
-            'FolderName': 'Glary Utilities 5',
-            'Target': ['Glary Utilities 5.lnk']
-        },
-        'Hard Disk Sentinel': {
-            'FolderName': 'Hard Disk Sentinel',
-            'Target': ['Hard Disk Sentinel.lnk', 'Hard Disk Sentinel Start Service.lnk', 'Hard Disk Sentinel Stop Service.lnk']
-        },
-        'IP Camera': {
-            'FolderName': 'IP Camera Adapter',
-            'Target': ['Configure IP Camera Adapter.lnk']
-        },
-        'Mendeley': {
-            'FolderName': 'Mendeley Desktop',
-            'Target': ['Mendeley Desktop.lnk']
-        },
-        'MongoDB': {
-            'FolderName': 'MongoDB',
-            'Target': ['MongoDB Compass.lnk']
-        },
-        'VirtualBox': {
-            'FolderName': 'Oracle VM VirtualBox',
-            'Target': ['Oracle VM VirtualBox.lnk']
-        },
-        'Plagiarism Checker X': {
-            'FolderName': 'Plagiarism Checker X',
-            'Target': ['Launch Plagiarism Checker X.lnk']
-        },
-        'PowerISO': {
-            'FolderName': 'PowerISO',
-            'Target': ['PowerISO.lnk', 'PowerISO Virtual Drive Manager.lnk']
-        },
-        'R': {
-            'FolderName': 'R',
-            'Target': ['R i386 4.0.3.lnk', 'R x64 4.0.3.lnk']
-        },
-        'Recuva': {
-            'FolderName': 'Recuva',
-            'Target': ['Recuva.lnk']
-        },
-        'Registrar Registry Manager': {
-            'FolderName': 'Registrar Registry Manager',
-            'Target': ['Registrar Registry Manager.lnk']
-        },
-        'Revo Uninstaller Pro': {
-            'FolderName': 'Revo Uninstaller Pro',
-            'Target': ['Revo Uninstaller Pro.lnk']
-        },
-        'Riot Games': {
-            'FolderName': 'Riot Games',
-            'Target': ['VALORANT.lnk']
-        },
-        'RStudio': {
-            'FolderName': 'RStudio',
-            'Target': ['RStudio.lnk']
-        },
-        'SafeExamBrowser': {
-            'FolderName': 'SafeExamBrowser',
-            'Target': ['SEB Configuration Tool.lnk', 'SEB Reset Utility.lnk']
-        },
-        'SoundWire': {
-            'FolderName': 'SoundWire Server',
-            'Target': ['SoundWire Server.lnk']
-        },
-        'Speccy': {
-            'FolderName': 'Speccy',
-            'Target': ['Speccy.lnk']
-        },
-        'System Explorer': {
-            'FolderName': 'System Explorer',
-            'Target': ['System Explorer.lnk']
-        },
-        'System Tools': {
-            'FolderName': 'System Tools',
-            'Target': ['Task Manager.lnk']
-        },
-        'Undeluxe': {
-            'FolderName': 'Undeluxe',
-            'Target': ['Undeluxe Protected Files Explorer.lnk', 'Undeluxe Control Center.lnk']
-        },
-        'VcXsrv': {
-            'FolderName': 'VcXsrv',
-            'Target': ['XLaunch.lnk']
-        },
-        'Visual Studio Code': {
-            'FolderName': 'Visual Studio Code',
-            'Target': ['Visual Studio Code.lnk']
-        },
-        'WhoCrashed': {
-            'FolderName': 'WhoCrashed',
-            'Target': ['WhoCrashed.lnk']
-        },
-        'WhySoSlow': {
-            'FolderName': 'WhySoSlow',
-            'Target': ['WhySoSlow.lnk']
-        },
-        'WinRAR': {
-            'FolderName': 'WinRAR',
-            'Target': ['WinRAR.lnk']
-        }
-    },
-
-    # ? Blacklisted folder so it won't be proceed
-    'Unallowed': {
-        'NoGroup': {                        # ? <Name>: <Single folder name (ONLY ONE)>
-            'WinRAR': 'WinRAR',
-            'Office Tools': 'Microsoft Office Tools',
-            'Anaconda': 'Anaconda3 (64-bit)',
-            'CPUID': 'CPUID',
-            'Java': 'Java',
-            'Cinema 4D': 'Maxon',
-            'Node.js': 'Node.js',
-            'Reaper': 'REAPER (x64)',
-            'SWI-Prolog 8.2.1': 'SWI-Prolog 8.2.1',
-            'USB PC Camera': 'USB PC Camera',
-            'VoiceMeeter': 'VB Audio',
-            'Virtual Audio Cable': 'Virtual Audio Cable',
-            'Visual Studio 2019': 'Visual Studio 2019',
-            '': ''
-        },
-        'Groups': {                         # ? <Name>: <List of folder name(s)>
-            # 'AMD': ['AMD Bug Report Tool', 'AMD Radeon Software'],
-            'Microsoft': ['Microsoft Office Tools', 'Microsoft Silverlight']
-        },
-    },
-
-    'SysFile': {                            # ? System Shortcut should be ignored
-        'Files': ['desktop.ini', 'config.ini'],           # ? File name must be followed by their extension
-        'Directories': [                    # ? Folder name only
-            'Accessibility', 'Accessories', 'Administrative Tools', 'Maintenance', 'StartUp',
-            'Windows Accessories', 'Windows Administrative Tools', 'Windows Ease of Access',
-            'Windows Kits', 'Windows PowerShell', 'Windows System'
-        ]
-    }
-}
 
 conFil = [
     'help',
@@ -208,6 +37,13 @@ conFil = [
     'license',
     'manual',
     'docs'
+]
+
+dbFileName = [
+    'db',
+    'database',
+    'db.txt',
+    'database.txt'
 ]
 
 # ANCHOR: Functions
@@ -333,6 +169,21 @@ def moveWork(target):
     filesOnCurrentDir = getFileFolderList()
 
 # ANCHOR: Main
+filesOnCurrentDir = os.listdir()
+temp = set(dbFileName).intersection(filesOnCurrentDir)
+if len(temp) > 0:
+    dbFile = list(temp)[0]
+    with open(dbFile, 'r') as db:
+        Database = ast.literal_eval(db.read())
+else:
+    print('''[!!] No database detected
+    Database file must be EXACTLY one of this list:
+    - db\t\t(no extension)
+    - database
+    - db.txt\t(plaintext extension)
+    - database.txt''')
+    exit()
+
 moveWork(StartDir)
 if not filesOnCurrentDir == set():
     moveAll(filesOnCurrentDir, move_up=False)
