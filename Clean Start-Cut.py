@@ -171,18 +171,29 @@ def moveWork(target):
 # ANCHOR: Main
 filesOnCurrentDir = os.listdir()
 temp = set(dbFileName).intersection(filesOnCurrentDir)
-if len(temp) > 0:
+if len(temp) == 1:
     dbFile = list(temp)[0]
-    with open(dbFile, 'r') as db:
-        Database = ast.literal_eval(db.read())
+elif len(temp) > 1:
+    tempStr = ''.join([f'\n\t{temp.index(i) + 1}. {i}' for i in temp])
+    print(f'[!!] Multiple database file detected \
+            \n\tPlease select one:\n\t{tempStr}')
+    dbSelectInput = int(input("[<<] Select index number: "))
+    try:
+        dbFile = temp[dbSelectInput - 1]
+    except IndexError:
+        print('[!!] Invalid input. Should be in range')
 else:
     print('''[!!] No database detected
-    Database file must be EXACTLY one of this list:
+    Database file must be EXACTLY ONE of this list:
     - db\t\t(no extension)
     - database
     - db.txt\t(plaintext extension)
-    - database.txt''')
+    - database.txt
+    If two or more detected, user will be asked to choose one.''')
     exit()
+
+with open(dbFile, 'r') as db:
+    Database = ast.literal_eval(db.read())
 
 moveWork(StartDir)
 if not filesOnCurrentDir == set():
