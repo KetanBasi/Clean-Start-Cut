@@ -46,14 +46,51 @@ dbFileName = [
     'database.txt'
 ]
 
+# * Find database file
+filesOnCurrentDir = os.listdir()
+temp = set(dbFileName).intersection(filesOnCurrentDir)
+if len(temp) == 1:
+    dbFile = list(temp)[0]
+elif len(temp) > 1:
+    tempStr = ''.join([f'\n\t{temp.index(i) + 1}. {i}' for i in temp])
+    print(f'[!!] Multiple database file detected \
+            \n\tPlease select one:\n\t{tempStr}')
+    dbSelectInput = int(input("[<<] Select index number: "))
+    try:
+        dbFile = temp[dbSelectInput - 1]
+    except IndexError:
+        print('[!!] Invalid input. Should be in range')
+else:
+    print('''[!!] No database detected
+    Database file must be EXACTLY ONE of this list:
+    - db\t\t(no extension)
+    - database
+    - db.txt\t(plaintext extension)
+    - database.txt
+    If two or more detected, user will be asked to choose one.''')
+    exit()
+
+
+with open(dbFile, 'r') as db:
+    Database = ast.literal_eval(db.read())
+
+Allowed = [ (Database['Allowed'][program]['FolderName'], Database['Allowed'][program]['Target']) for program in Database['Allowed'] ]
+AllowedFolder = [ item[0] for item in Allowed ]
+AllowedTarget = [ item[1] for item in Allowed ]
+filterFiles = Database['SysFile']['Files']
+_Unallowed = [Database['SysFile']['Directories']] + [[Database['Unallowed']['NoGroup'][i] for i in Database['Unallowed']['NoGroup']]] + [Database['Unallowed']['Groups'][i] for i in Database['Unallowed']['Groups']]
+Unallowed = list(set(itertools.chain.from_iterable(_Unallowed)))
+
 # ANCHOR: Functions
 def moveShortCut(file, location, ext='.lnk', move_up=True):
     try:
         print(f'[>>] Moving: {file}')
         try:
-            if file.endswith(ext) and move_up:
+            # if file.endswith(ext) and move_up:
+            if move_up:
                 os.rename(f'{location}/{file}', file)
-            elif file.endswith(ext) and not move_up:
+            # elif file.endswith(ext) and not move_up:
+            elif not move_up:
                 os.rename(file, f'{location}/{file}')
         except FileExistsError:
             print(f'[! ] Error: File {file} already exist inside target location\n[>>]\tReplacing with the newest one')
@@ -68,20 +105,28 @@ def moveShortCut(file, location, ext='.lnk', move_up=True):
 def moveAll(files, move_up=True):
     if not move_up and os.getcwd().endswith('Start Menu'):
         target = 'Programs'
+    # ? Useless elif ???
     elif move_up and '\\Start Menu\\Programs\\' in os.getcwd():
         target = '..'
     else: target = '.'
     for item in files:
         print(f'\n=== Current Item: {item} ===')
         if not move_up:
-            moveShortCut(item, location=target, move_up=move_up)
+            moveShortCut(item, location=target, move_up=move_up) # move_up = False (<-- private note)
         else:
             try:
-                os.chdir(item)
-                itemInsideFolder = getFilteredList(getFolder=False)
-                itemFile = findTarget(item, itemInsideFolder)
-                os.chdir('..')
-                moveShortCut(itemFile, item)
+                # * If folder name listed in database (<-- private note)
+                if item in AllowedFolder:
+                    itemFile = AllowedTarget[AllowedFolder.index(item)]
+                    for targetList in itemFile:
+                        moveShortCut(targetList, item)
+                # * Else, ?
+                else:
+                    os.chdir(item)
+                    itemInsideFolder = getFilteredList(getFolder=False)
+                    itemFile = findTarget(item, itemInsideFolder)
+                    os.chdir('..')
+                    moveShortCut(itemFile, item)
                 shutil.rmtree(item)
             except NotADirectoryError:
                 continue
@@ -136,10 +181,6 @@ def getFileFolderList(dir='.'):
     global filesOnCurrentDir
     os.chdir(dir)
     filesOnCurrentDir = os.listdir()
-    selectedFiles = [ (Database['Allowed'][program]['FolderName'], Database['Allowed'][program]['Target']) for program in Database['Allowed'] ]
-    filterFiles = Database['SysFile']['Files']
-    _Unallowed = [Database['SysFile']['Directories']] + [[Database['Unallowed']['NoGroup'][i] for i in Database['Unallowed']['NoGroup']]] + [Database['Unallowed']['Groups'][i] for i in Database['Unallowed']['Groups']]
-    Unallowed = list(set(itertools.chain.from_iterable(_Unallowed)))
     try:
         Unallowed.remove('')
     except ValueError:
@@ -169,32 +210,6 @@ def moveWork(target):
     filesOnCurrentDir = getFileFolderList()
 
 # ANCHOR: Main
-filesOnCurrentDir = os.listdir()
-temp = set(dbFileName).intersection(filesOnCurrentDir)
-if len(temp) == 1:
-    dbFile = list(temp)[0]
-elif len(temp) > 1:
-    tempStr = ''.join([f'\n\t{temp.index(i) + 1}. {i}' for i in temp])
-    print(f'[!!] Multiple database file detected \
-            \n\tPlease select one:\n\t{tempStr}')
-    dbSelectInput = int(input("[<<] Select index number: "))
-    try:
-        dbFile = temp[dbSelectInput - 1]
-    except IndexError:
-        print('[!!] Invalid input. Should be in range')
-else:
-    print('''[!!] No database detected
-    Database file must be EXACTLY ONE of this list:
-    - db\t\t(no extension)
-    - database
-    - db.txt\t(plaintext extension)
-    - database.txt
-    If two or more detected, user will be asked to choose one.''')
-    exit()
-
-with open(dbFile, 'r') as db:
-    Database = ast.literal_eval(db.read())
-
 moveWork(StartDir)
 if not filesOnCurrentDir == set():
     moveAll(filesOnCurrentDir, move_up=False)
