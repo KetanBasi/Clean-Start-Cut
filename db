@@ -39,11 +39,13 @@
         },
         'IP Camera': {
             'FolderName': 'IP Camera Adapter',
-            'Target': ['Configure IP Camera Adapter.lnk']
+            'Target': ['Configure IP Camera Adapter.lnk'],
+            'NewName': ['IP Cam Configure.lnk']
         },
         'Mendeley': {
             'FolderName': 'Mendeley Desktop',
-            'Target': ['Mendeley Desktop.lnk']
+            'Target': ['Mendeley Desktop.lnk'],
+            'NewName': ['Mendeley.lnk']
         },
         'MongoDB': {
             'FolderName': 'MongoDB',
@@ -51,11 +53,13 @@
         },
         'VirtualBox': {
             'FolderName': 'Oracle VM VirtualBox',
-            'Target': ['Oracle VM VirtualBox.lnk']
+            'Target': ['Oracle VM VirtualBox.lnk'],
+            'NewName': ['VirtualBox.lnk']
         },
         'Plagiarism Checker X': {
             'FolderName': 'Plagiarism Checker X',
-            'Target': ['Launch Plagiarism Checker X.lnk']
+            'Target': ['Launch Plagiarism Checker X.lnk'],
+            'NewName': ['Plagiarism Checker X.lnk']
         },
         'PowerISO': {
             'FolderName': 'PowerISO',
@@ -111,7 +115,8 @@
         },
         'VcXsrv': {
             'FolderName': 'VcXsrv',
-            'Target': ['XLaunch.lnk']
+            'Target': ['XLaunch.lnk'],
+            'NewName': ['VcXsrv Launch.lnk']
         },
         'Visual Studio Code': {
             'FolderName': 'Visual Studio Code',

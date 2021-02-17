@@ -77,32 +77,42 @@ with open(dbFile, 'r') as db:
 Allowed = [ (Database['Allowed'][program]['FolderName'], Database['Allowed'][program]['Target']) for program in Database['Allowed'] ]
 AllowedFolder = [ item[0] for item in Allowed ]
 AllowedTarget = [ item[1] for item in Allowed ]
+TargetFolder = []
+TargetNewName = []
+for item in Database['Allowed']:
+    try:
+        TargetNewName.append(Database['Allowed'][item]['NewName']) # This first to check if NewName available (<-- private note)
+        TargetFolder.append(Database['Allowed'][item]['FolderName'])
+    except KeyError:
+        continue
 filterFiles = Database['SysFile']['Files']
 _Unallowed = [Database['SysFile']['Directories']] + [[Database['Unallowed']['NoGroup'][i] for i in Database['Unallowed']['NoGroup']]] + [Database['Unallowed']['Groups'][i] for i in Database['Unallowed']['Groups']]
 Unallowed = list(set(itertools.chain.from_iterable(_Unallowed)))
 
 # ANCHOR: Functions
-def moveShortCut(file, location, ext='.lnk', move_up=True):
+def moveShortCut(file, location, move_up=True, newName=None):
+    if newName == None:
+        newName = file
     try:
         print(f'[>>] Moving: {file}')
         try:
-            # if file.endswith(ext) and move_up:
             if move_up:
-                os.rename(f'{location}/{file}', file)
-            # elif file.endswith(ext) and not move_up:
+                # os.rename(f'{location}/{file}', file)
+                os.rename(f'{location}/{file}', newName)
             elif not move_up:
-                os.rename(file, f'{location}/{file}')
+                # os.rename(file, f'{location}/{file}')
+                os.rename(file, f'{location}/{newName}')
         except FileExistsError:
             print(f'[! ] Error: File {file} already exist inside target location\n[>>]\tReplacing with the newest one')
-            if os.stat(file).st_mtime < os.stat(f'{location}/{file}').st_mtime and move_up:
-                os.rename(f'{location}/{file}', file)
-            elif os.stat(file).st_mtime > os.stat(f'{location}/{file}').st_mtime and not move_up:
-                os.rename(file, f'{location}/{file}')
+            if os.stat(file).st_mtime < os.stat(f'{location}/{newName}').st_mtime and move_up:
+                os.rename(f'{location}/{file}', newName)
+            elif os.stat(file).st_mtime > os.stat(f'{location}/{newName}').st_mtime and not move_up:
+                os.rename(file, f'{location}/{newName}')
         return True
     except FileNotFoundError:
         return False
 
-def moveAll(files, move_up=True):
+def moveAll(files, move_up=True, rename=True):
     if not move_up and os.getcwd().endswith('Start Menu'):
         target = 'Programs'
     # ? Useless elif ???
@@ -111,22 +121,31 @@ def moveAll(files, move_up=True):
     else: target = '.'
     for item in files:
         print(f'\n=== Current Item: {item} ===')
+        if rename and item in TargetFolder:
+            NewItemNameList = TargetNewName[TargetFolder.index(item)]
+            print(NewItemNameList)
+        else:
+            NewItemNameList = None
         if not move_up:
-            moveShortCut(item, location=target, move_up=move_up) # move_up = False (<-- private note)
+            # TODO: Work on this line:
+            # * UnboundLocalError: local variable 'NewItemName' referenced before assignment
+            # ! FIX IT
+            moveShortCut(item, location=target, move_up=move_up, newName=NewItemName) # move_up = False (<-- private note)
         else:
             try:
                 # * If folder name listed in database (<-- private note)
                 if item in AllowedFolder:
                     itemFile = AllowedTarget[AllowedFolder.index(item)]
                     for targetList in itemFile:
-                        moveShortCut(targetList, item)
+                        NewItemName = NewItemNameList[itemFile.index(targetList)]
+                        moveShortCut(targetList, item, newName=NewItemName)
                 # * Else, ?
                 else:
                     os.chdir(item)
                     itemInsideFolder = getFilteredList(getFolder=False)
                     itemFile = findTarget(item, itemInsideFolder)
                     os.chdir('..')
-                    moveShortCut(itemFile, item)
+                    moveShortCut(itemFile, item, newName=NewItemName)
                 shutil.rmtree(item)
             except NotADirectoryError:
                 continue
