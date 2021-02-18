@@ -94,7 +94,10 @@ def moveShortCut(file, location, move_up=True, newName=None):
     if newName == None:
         newName = file
     try:
-        print(f'[>>] Moving: {file}')
+        if newName == None:
+            print(f'[>>] Moving: {file}')
+        else:
+            print(f'[>>] Moving: {file} as \"{newName}\"')
         try:
             if move_up:
                 # os.rename(f'{location}/{file}', file)
@@ -123,21 +126,20 @@ def moveAll(files, move_up=True, rename=True):
         print(f'\n=== Current Item: {item} ===')
         if rename and item in TargetFolder:
             NewItemNameList = TargetNewName[TargetFolder.index(item)]
-            print(NewItemNameList)
         else:
             NewItemNameList = None
         if not move_up:
-            # TODO: Work on this line:
-            # * UnboundLocalError: local variable 'NewItemName' referenced before assignment
-            # ! FIX IT
-            moveShortCut(item, location=target, move_up=move_up, newName=NewItemName) # move_up = False (<-- private note)
+            moveShortCut(item, location=target, move_up=move_up, newName=NewItemNameList) # move_up = False (<-- private note)
         else:
             try:
                 # * If folder name listed in database (<-- private note)
                 if item in AllowedFolder:
                     itemFile = AllowedTarget[AllowedFolder.index(item)]
                     for targetList in itemFile:
-                        NewItemName = NewItemNameList[itemFile.index(targetList)]
+                        if NewItemNameList != None:
+                            NewItemName = NewItemNameList[itemFile.index(targetList)]
+                        else:
+                            NewItemName = None
                         moveShortCut(targetList, item, newName=NewItemName)
                 # * Else, ?
                 else:
@@ -145,7 +147,7 @@ def moveAll(files, move_up=True, rename=True):
                     itemInsideFolder = getFilteredList(getFolder=False)
                     itemFile = findTarget(item, itemInsideFolder)
                     os.chdir('..')
-                    moveShortCut(itemFile, item, newName=NewItemName)
+                    moveShortCut(itemFile, item)
                 shutil.rmtree(item)
             except NotADirectoryError:
                 continue
