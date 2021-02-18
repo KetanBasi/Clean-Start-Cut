@@ -40,7 +40,7 @@
         'IP Camera': {
             'FolderName': 'IP Camera Adapter',
             'Target': ['Configure IP Camera Adapter.lnk'],
-            'NewName': ['IP Cam Configure.lnk']
+            'NewName': ['IP Camera Configure.lnk']
         },
         'Mendeley': {
             'FolderName': 'Mendeley Desktop',
