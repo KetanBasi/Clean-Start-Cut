@@ -1,4 +1,5 @@
 import os, ast, re, configparser, itertools, shutil
+from sys import exit as sys_exit
 
 # ANCHOR: Aditional lib
 from fuzzywuzzy import fuzz
@@ -90,6 +91,19 @@ _Unallowed = [Database['SysFile']['Directories']] + [[Database['Unallowed']['NoG
 Unallowed = list(set(itertools.chain.from_iterable(_Unallowed)))
 
 # ANCHOR: Functions
+def checkAccess(target):
+    tempName = '.le-l'
+    if type(target) == list:
+        target = target[0]
+    if target == tempName:
+        tempName = '.leel'
+    try:
+        os.rename(target, tempName)
+        os.rename(tempName, target)
+        return True
+    except:
+        return False
+
 def moveShortCut(file, location, move_up=True, newName=None):
     if newName == None:
         newName = file
@@ -232,11 +246,19 @@ def moveWork(target):
 
 # ANCHOR: Main
 moveWork(StartDir)
+if not checkAccess('Programs'):
+    print(f'''[!!] Error: Cannot work on current directory ({os.getcwd()})
+            Please try again with elevated privileges''')
+    sys_exit()
 if not filesOnCurrentDir == set():
     moveAll(filesOnCurrentDir, move_up=False)
 
 moveWork('Programs')
 filesOnCurrentDir = getFilteredList()
+if not checkAccess(filesOnCurrentDir):
+    print(f'''[!!] Error: Cannot work on current directory ({os.getcwd()})
+            Please try again with elevated privileges''')
+    sys_exit()
 print(filesOnCurrentDir)
 moveAll(filesOnCurrentDir)
 
