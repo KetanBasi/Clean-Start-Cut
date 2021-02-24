@@ -1,4 +1,4 @@
-import os, ast, re, configparser, itertools, shutil
+import os, ast, re, configparser, itertools, shutil, zipfile, random
 from sys import exit as sys_exit
 
 # ANCHOR: Aditional lib
@@ -20,7 +20,19 @@ DBFileName = cfg.get('Main', 'DBFile')
 threshold = cfg.getfloat('Main', 'Sensitivity')
 maxDepth = cfg.getint('Main', 'MaxDepth')
 
+userHomeDir = os.path.expanduser('~')
+
 filesOnCurrentDir = []
+
+exitStr = [
+    'Goodbye!',
+    'Bye!',
+    'Bye fellas!',
+    'See ya later!',
+    'Adios!',
+    'Ciao!',
+    'Have a nice day!'
+]
 
 conFil = [
     'help',
@@ -75,7 +87,12 @@ else:
 with open(dbFile, 'r') as db:
     Database = ast.literal_eval(db.read())
 
-Allowed = [ (Database['Allowed'][program]['FolderName'], Database['Allowed'][program]['Target']) for program in Database['Allowed'] ]
+Allowed = [
+    (Database['Allowed'][program]['FolderName'],
+    Database['Allowed'][program]['Target'])
+        for
+        program in Database['Allowed']
+    ]
 AllowedFolder = [ item[0] for item in Allowed ]
 AllowedTarget = [ item[1] for item in Allowed ]
 TargetFolder = []
@@ -87,13 +104,68 @@ for item in Database['Allowed']:
     except KeyError:
         continue
 filterFiles = Database['SysFile']['Files']
-_Unallowed = [Database['SysFile']['Directories']] + [[Database['Unallowed']['NoGroup'][i] for i in Database['Unallowed']['NoGroup']]] + [Database['Unallowed']['Groups'][i] for i in Database['Unallowed']['Groups']]
+_Unallowed = [
+    Database['SysFile']['Directories']] \
+    + [
+        [Database['Unallowed']['NoGroup'][i]
+            for
+        i in Database['Unallowed']['NoGroup']]
+    ] + [
+        Database['Unallowed']['Groups'][j]
+            for
+        j in Database['Unallowed']['Groups']
+    ]
 Unallowed = list(set(itertools.chain.from_iterable(_Unallowed)))
 
 # ANCHOR: Functions
+# TODO: Fix this. Bug: Empty zip file
+def makeDirBackup(pathTarget, dst=f'{userHomeDir}\\Desktop', archiveName='Start Menu Backup'):
+    global mainDir
+    archiveExtension = '.zip'
+    archiveFullName = f'{archiveName}{archiveExtension}'
+    print(f'[>>] Backup: {pathTarget} as {archiveFullName}')
+    try:
+        os.chdir(pathTarget)
+        os.chdir('..')
+        with zipfile.ZipFile(f'{archiveFullName}', 'w') as zipObj:
+            for root, dirs, filenames in os.walk(pathTarget):
+                for file in filenames:
+                    zipObj.write(
+                        os.path.join(root, file),
+                        os.path.relpath(
+                            os.path.join(root, file),
+                            os.path.join(pathTarget, '..')
+                        )
+                    )
+        if os.path.exists(f'{dst}\\{archiveFullName}'):
+            fileExsist = True
+            i = 1
+            while fileExsist:
+                if os.path.exists(f'{dst}\\{archiveName} ({i}){archiveExtension}'):
+                    i += 1
+                else:
+                    newArchiveName = f'{archiveName} ({i}){archiveExtension}'
+                    print(f'[i ] File exist, save as {newArchiveName} instead')
+                    fileExsist = False
+                    break
+        else:
+            newArchiveName = archiveFullName
+        shutil.move(archiveFullName, f'{dst}\\{newArchiveName}')
+        os.chdir(mainDir)
+        print(f'[i ] Backup complete. The backup file moved to {dst}\n')
+        return True
+    except:
+        try: os.remove(archiveName)
+        except: pass
+        print(f'[! ] Backup failed')
+        return False
+
 def checkAccess(target):
     tempName = '.le-l'
     if type(target) == list:
+        if len(target) == 0:
+            # print(target)
+            return False
         target = target[0]
     if target == tempName:
         tempName = '.leel'
@@ -114,10 +186,8 @@ def moveShortCut(file, location, move_up=True, newName=None):
             print(f'[>>] Moving: {file} as \"{newName}\"')
         try:
             if move_up:
-                # os.rename(f'{location}/{file}', file)
                 os.rename(f'{location}/{file}', newName)
             elif not move_up:
-                # os.rename(file, f'{location}/{file}')
                 os.rename(file, f'{location}/{newName}')
         except FileExistsError:
             print(f'[! ] Error: File {file} already exist inside target location\n[>>]\tReplacing with the newest one')
@@ -231,7 +301,7 @@ def getFilteredList(getFolder=True):
         try:
             os.chdir(item)
             if getFolder:
-                print(item)
+                # print(item)
                 result.append(item)
             os.chdir('..')
         except NotADirectoryError:
@@ -244,22 +314,56 @@ def moveWork(target):
     os.chdir(target)
     filesOnCurrentDir = getFileFolderList()
 
+def exitProgram():
+    exitMsg = random.choice(exitStr)
+    print(f'\n\t{exitMsg}\n')
+    sys_exit()
+
 # ANCHOR: Main
-moveWork(StartDir)
-if not checkAccess('Programs'):
-    print(f'''[!!] Error: Cannot work on current directory ({os.getcwd()})
-            Please try again with elevated privileges''')
-    sys_exit()
-if not filesOnCurrentDir == set():
-    moveAll(filesOnCurrentDir, move_up=False)
+if __name__ == '__main__':
+    needConfirm = True
+    while needConfirm:
+        runConfirm = input('[<<] Confirm: Clean up your Start Menu folder [Y/n] ? ').lower()
+        if runConfirm == 'y' or runConfirm == '':
+            needConfirm = False
+        elif runConfirm == 'n':
+            exitProgram()
+    mainDir = os.getcwd()
+    os.chdir(f'{StartDir}\\..')
+    if not makeDirBackup('Start Menu'):
+        print(f'''[!!] Error: Cannot make backup.
+                Please try again with elevated privileges''')
+        userChoose = True
+        while userChoose:
+            print('[??] Would you like to continue without make a backup? [Y/n]')
+            userChoice = input('[<<] Y/n ? ').lower().strip()
+            if userChoice == '' or userChoice == 'y':
+                userChoose = False
+                break
+            elif userChoice == 'n':
+                exitProgram()
+            else:
+                continue
+    os.chdir(mainDir)
 
-moveWork('Programs')
-filesOnCurrentDir = getFilteredList()
-if not checkAccess(filesOnCurrentDir):
-    print(f'''[!!] Error: Cannot work on current directory ({os.getcwd()})
-            Please try again with elevated privileges''')
-    sys_exit()
-print(filesOnCurrentDir)
-moveAll(filesOnCurrentDir)
+    moveWork(StartDir)
+    if not checkAccess('Programs'):
+        print(f'''[!!] Error: Cannot work on current directory ({os.getcwd()})
+                Please try again with elevated privileges''')
+        exitProgram()
+    if not filesOnCurrentDir == set():
+        moveAll(filesOnCurrentDir, move_up=False)
 
-# ANCHOR: =========
+    moveWork('Programs')
+    filesOnCurrentDir = getFilteredList()
+    if len(filesOnCurrentDir) == 0:
+        print(f'[! ] Nothing to do, everything seems fine.')
+        exitProgram()
+    elif not checkAccess(filesOnCurrentDir):
+        print(f'''[!!] Error: Cannot work on current directory ({os.getcwd()})
+                Please try again with elevated privileges''')
+        exitProgram()
+    # print(filesOnCurrentDir)
+    moveAll(filesOnCurrentDir)
+    print(f'[i ] Done.')
+    exitProgram()
