@@ -2,9 +2,15 @@
 
     'Allowed': {
         # ? <Name>: {
-        # ?     'FolderName': <Folder name>
-        # ?     'Target': <Target(s)>
+        # ?     'FolderName' : <Folder name> ,
+        # ?     'Target' : <Target(s)> ,
+        # ?     'NewName' : <New name for each item (!!! Must be in the same order)>
         # ? }
+        'Anaconda': {
+            'FolderName': 'Anaconda3 (64-bit)',
+            'Target': ['Anaconda Navigator (Anaconda3).lnk', 'Anaconda Powershell Prompt (Anaconda3).lnk', 'Anaconda Prompt (Anaconda3).lnk', 'Jupyter Notebook (Anaconda3).lnk', 'Reset Spyder Settings (Anaconda3).lnk', 'Spyder (Anaconda3).lnk'],
+            'NewName': ['Anaconda3 Navigator.lnk', 'Anaconda3 Powershell Prompt.lnk', 'Anaconda3 Prompt.lnk', 'Anaconda3 Jupyter Notebook.lnk', 'Anaconda3 Reset Spyder Settings.lnk', 'Anaconda3 Spyder.lnk']
+        },
         'GDrive': {
             'FolderName': 'Backup and Sync from Google',
             'Target': ['Backup and Sync from Google.lnk', 'Google Docs.lnk', 'Google Sheets.lnk', 'Google Slides.lnk']
@@ -141,7 +147,6 @@
         'NoGroup': {                        # ? <Name>: <Single folder name (ONLY ONE)>
             'WinRAR': 'WinRAR',
             'Office Tools': 'Microsoft Office Tools',
-            'Anaconda': 'Anaconda3 (64-bit)',
             'CPUID': 'CPUID',
             'Java': 'Java',
             'Cinema 4D': 'Maxon',
@@ -151,8 +156,7 @@
             'USB PC Camera': 'USB PC Camera',
             'VoiceMeeter': 'VB Audio',
             'Virtual Audio Cable': 'Virtual Audio Cable',
-            'Visual Studio 2019': 'Visual Studio 2019',
-            '': ''
+            'Visual Studio 2019': 'Visual Studio 2019'
         },
         'Groups': {                         # ? <Name>: <List of folder name(s)>
             # 'AMD': ['AMD Bug Report Tool', 'AMD Radeon Software'],
@@ -164,8 +168,8 @@
         'Files': ['desktop.ini', 'config.ini'],           # ? File name must be followed by their extension
         'Directories': [                    # ? Folder name only
             'Accessibility', 'Accessories', 'Administrative Tools', 'Maintenance', 'StartUp',
-            'Windows Accessories', 'Windows Administrative Tools', 'Windows Ease of Access',
-            'Windows Kits', 'Windows PowerShell', 'Windows System'
+            'System Tools', 'Windows Accessories', 'Windows Administrative Tools',
+            'Windows Ease of Access', 'Windows Kits', 'Windows PowerShell', 'Windows System'
         ]
     }
 }

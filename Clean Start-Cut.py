@@ -12,15 +12,21 @@ inTest = cfg.getboolean('Main', 'inTest')
 
 # Working location
 if inTest:
-    StartDir = cfg.get('Main', 'StartTestDir')
+    StartDir = [
+        f'{os.getcwd()}\\test_dir\\Start Menu',
+        f'{os.getcwd()}\\test_dir\\Start Menu 2'
+    ]
 else:
-    StartDir = cfg.get('Main', 'StartMenuDir')
+    StartDir = [
+        "C:\\ProgramData\\Microsoft\\Windows\\Start Menu",
+        f"{os.getenv('appdata')}\\Microsoft\\Windows\\Start Menu"
+    ]
 
 DBFileName = cfg.get('Main', 'DBFile')
 threshold = cfg.getfloat('Main', 'Sensitivity')
 maxDepth = cfg.getint('Main', 'MaxDepth')
 
-userHomeDir = os.path.expanduser('~')
+userHomeDir = os.getenv('userprofile')
 
 filesOnCurrentDir = []
 
@@ -118,7 +124,6 @@ _Unallowed = [
 Unallowed = list(set(itertools.chain.from_iterable(_Unallowed)))
 
 # ANCHOR: Functions
-# TODO: Fix this. Bug: Empty zip file
 def makeDirBackup(pathTarget, dst=f'{userHomeDir}\\Desktop', archiveName='Start Menu Backup'):
     global mainDir
     archiveExtension = '.zip'
@@ -157,6 +162,7 @@ def makeDirBackup(pathTarget, dst=f'{userHomeDir}\\Desktop', archiveName='Start 
     except:
         try: os.remove(archiveName)
         except: pass
+        os.chdir(mainDir)
         print(f'[! ] Backup failed')
         return False
 
@@ -164,7 +170,6 @@ def checkAccess(target):
     tempName = '.le-l'
     if type(target) == list:
         if len(target) == 0:
-            # print(target)
             return False
         target = target[0]
     if target == tempName:
@@ -195,6 +200,8 @@ def moveShortCut(file, location, move_up=True, newName=None):
                 os.rename(f'{location}/{file}', newName)
             elif os.stat(file).st_mtime > os.stat(f'{location}/{newName}').st_mtime and not move_up:
                 os.rename(file, f'{location}/{newName}')
+        except TypeError:
+            return False
         return True
     except FileNotFoundError:
         return False
@@ -207,7 +214,7 @@ def moveAll(files, move_up=True, rename=True):
         target = '..'
     else: target = '.'
     for item in files:
-        print(f'\n=== Current Item: {item} ===')
+        print(f'\n\n=== Current Item: {item} ===')
         if rename and item in TargetFolder:
             NewItemNameList = TargetNewName[TargetFolder.index(item)]
         else:
@@ -224,15 +231,18 @@ def moveAll(files, move_up=True, rename=True):
                             NewItemName = NewItemNameList[itemFile.index(targetList)]
                         else:
                             NewItemName = None
-                        moveShortCut(targetList, item, newName=NewItemName)
+                        moveSuccess = moveShortCut(targetList, item, newName=NewItemName)
+                        if moveSuccess:
+                            shutil.rmtree(item)
                 # * Else, ?
                 else:
                     os.chdir(item)
                     itemInsideFolder = getFilteredList(getFolder=False)
                     itemFile = findTarget(item, itemInsideFolder)
                     os.chdir('..')
-                    moveShortCut(itemFile, item)
-                shutil.rmtree(item)
+                    moveSuccess = moveShortCut(itemFile, item)
+                    if moveSuccess:
+                        shutil.rmtree(item)
             except NotADirectoryError:
                 continue
 
@@ -250,7 +260,7 @@ def findMatch(match, options):
             if j >= threshold: score1 += 1
         score2 = (ratio + tokenSortRatio) / 2
         results.append( (item, score1, score2) )
-        print(f'[  ]\tScore 1: {score1}\t\tScore 2: {score2}')
+        print(f'[  ]\tScore A: {score1}\t\tScore B: {score2}')
     score2 = [results[i][2] for i in range(len(results))]
     highest = results[score2.index(max(score2))]
     print(f'[  ]\tScore: {score2}')
@@ -301,7 +311,6 @@ def getFilteredList(getFolder=True):
         try:
             os.chdir(item)
             if getFolder:
-                # print(item)
                 result.append(item)
             os.chdir('..')
         except NotADirectoryError:
@@ -319,51 +328,59 @@ def exitProgram():
     print(f'\n\t{exitMsg}\n')
     sys_exit()
 
-# ANCHOR: Main
-if __name__ == '__main__':
-    needConfirm = True
-    while needConfirm:
-        runConfirm = input('[<<] Confirm: Clean up your Start Menu folder [Y/n] ? ').lower()
-        if runConfirm == 'y' or runConfirm == '':
-            needConfirm = False
-        elif runConfirm == 'n':
-            exitProgram()
-    mainDir = os.getcwd()
-    os.chdir(f'{StartDir}\\..')
-    if not makeDirBackup('Start Menu'):
-        print(f'''[!!] Error: Cannot make backup.
-                Please try again with elevated privileges''')
-        userChoose = True
-        while userChoose:
-            print('[??] Would you like to continue without make a backup? [Y/n]')
-            userChoice = input('[<<] Y/n ? ').lower().strip()
-            if userChoice == '' or userChoice == 'y':
-                userChoose = False
-                break
-            elif userChoice == 'n':
-                exitProgram()
-            else:
-                continue
-    os.chdir(mainDir)
-
-    moveWork(StartDir)
+def cleanStartCut(dir):
+    global filesOnCurrentDir
+    moveWork(dir)
     if not checkAccess('Programs'):
         print(f'''[!!] Error: Cannot work on current directory ({os.getcwd()})
                 Please try again with elevated privileges''')
         exitProgram()
     if not filesOnCurrentDir == set():
         moveAll(filesOnCurrentDir, move_up=False)
-
     moveWork('Programs')
     filesOnCurrentDir = getFilteredList()
     if len(filesOnCurrentDir) == 0:
         print(f'[! ] Nothing to do, everything seems fine.')
-        exitProgram()
     elif not checkAccess(filesOnCurrentDir):
         print(f'''[!!] Error: Cannot work on current directory ({os.getcwd()})
                 Please try again with elevated privileges''')
         exitProgram()
-    # print(filesOnCurrentDir)
     moveAll(filesOnCurrentDir)
     print(f'[i ] Done.')
-    exitProgram()
+
+# ANCHOR: Main
+if __name__ == '__main__':
+    try:
+        needConfirm = True
+        while needConfirm:
+            for i in range(len(StartDir)):
+                print(f'[  ] dir {i + 1}: {StartDir[i]}')
+            runConfirm = input('[<<] Confirm: Clean up your Start Menu folder [Y/n] ? ').lower()
+            if runConfirm == 'y' or runConfirm == '':
+                needConfirm = False
+            elif runConfirm == 'n':
+                exitProgram()
+        mainDir = os.getcwd()
+        for startMenuDir in StartDir:
+            folderName = startMenuDir.split('\\')[-1]
+            os.chdir(f'{startMenuDir}')
+            os.chdir(f'..')
+            if not makeDirBackup(folderName):
+                print(f'''[!!] Error: Cannot make backup.
+                        Please try again with elevated privileges''')
+                userChoose = True
+                while userChoose:
+                    print('[??] Would you like to continue without make a backup? [Y/n]')
+                    userChoice = input('[<<] Y/n ? ').lower().strip()
+                    if userChoice == '' or userChoice == 'y':
+                        userChoose = False
+                        break
+                    elif userChoice == 'n':
+                        exitProgram()
+                    else:
+                        continue
+            os.chdir(mainDir)
+            cleanStartCut(startMenuDir)
+        exitProgram()
+    except EOFError or KeyboardInterrupt:
+        exitProgram()
