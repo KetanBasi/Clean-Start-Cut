@@ -23,10 +23,17 @@ Install FuzzyWuzzy:
 Usually, `pip install` on Windows and `pip3 install` on Linux.
 
 ## Changelog
+**Note: Some changes very likely to be undocumented**
+
+[v0.5.2]
+* Fix for cannot move multiple shortcuts
+* Better console output
 
 [v0.5.1]
 * Fix auto delete for every folder selected without considering the result of moving the items
 * Error fix when a scanned folder has no item to process
+* Bug(s):
+  * Cannot move multiple shortcut (My mistake, I realize this is a bug)
 
 [v0.5]
 * Backup Start Menu folder to user Desktop folder
