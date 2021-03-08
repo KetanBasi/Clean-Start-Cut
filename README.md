@@ -20,7 +20,7 @@ Install FuzzyWuzzy:
 
 `pip install fuzzywuzzy` or `pip3 install fuzzywuzzy`
 
-Usually, "pip install" on Windows and "pip3 install" on Linux.
+Usually, `pip install` on Windows and `pip3 install` on Linux.
 
 ## Changelog
 
