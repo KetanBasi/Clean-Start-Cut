@@ -1,19 +1,19 @@
 # Clean Start-Cut
-Clean-up Start Menu folder so you can run your program a bit faster instead of opening the folder of the program you want to use.
+Clean-up Start Menu folder. This program moves almost every of your app shortcut to Start Menu from the program’s folder. You can see the icons of your apps instead of their folder.
 
-*From*: Start Menu >> All Programs >> Program Folder >> Program Shortcut
-
-*To*: Start Menu >> All Programs >> Program Shortcut
-
+In short:
+* *From*: Start Menu >> All Programs >> Program Folder >> Program Shortcut
+* *To*: Start Menu >> All Programs >> Program Shortcut
 
 ## Python Module
 - os
-- ast
-- configparser
-- itertools
+    (probably I would remove this and reimplement with shutil)
 - shutil
+- ast
 - sys
 - zipfile
+- itertools
+- configparser
 - fuzzywuzzy (You might want to install it manually)
 
 Install FuzzyWuzzy:
