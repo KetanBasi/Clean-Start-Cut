@@ -225,15 +225,18 @@ def moveAll(files, move_up=True, rename=True):
             try:
                 # * If folder name listed in database (<-- private note)
                 if item in AllowedFolder:
+                    moveSuccess = True
                     itemFile = AllowedTarget[AllowedFolder.index(item)]
                     for targetList in itemFile:
                         if NewItemNameList != None:
                             NewItemName = NewItemNameList[itemFile.index(targetList)]
                         else:
                             NewItemName = None
-                        moveSuccess = moveShortCut(targetList, item, newName=NewItemName)
-                        if moveSuccess:
-                            shutil.rmtree(item)
+                        itemMoved = moveShortCut(targetList, item, newName=NewItemName)
+                        if not itemMoved:
+                            moveSuccess = False
+                    if moveSuccess:
+                        shutil.rmtree(item)
                 # * Else, ?
                 else:
                     os.chdir(item)
@@ -248,9 +251,9 @@ def moveAll(files, move_up=True, rename=True):
 
 def findMatch(match, options):
     results = []
+    print(f'[>>] Matching item with folder name: \'{match}\'')
     for item in options:
-        print(f'[>>] Matching \'{match}\' with \'{item}\'')
-        itemName = re.match(r"(.+)[.]{1}[a-zA-Z]+$", item).group(1)
+        itemName = re.match(r"(.+)[.]{1}[a-zA-Z]+$", item)[1]
         ratio = fuzz.ratio(match, itemName)
         partialRatio = fuzz.partial_ratio(match, itemName)
         tokenSortRatio = fuzz.token_sort_ratio(match, itemName)
@@ -260,11 +263,10 @@ def findMatch(match, options):
             if j >= threshold: score1 += 1
         score2 = (ratio + tokenSortRatio) / 2
         results.append( (item, score1, score2) )
-        print(f'[  ]\tScore A: {score1}\t\tScore B: {score2}')
+        print(f'[  ] Score A: {score1} Score B: {score2} for \'{item}\'')
     score2 = [results[i][2] for i in range(len(results))]
     highest = results[score2.index(max(score2))]
-    print(f'[  ]\tScore: {score2}')
-    print(f'[>>] Highest:\t{highest[0]}\n[  ]\t\tScore:{highest[2]}')
+    print(f'[>>] Highest:\t{highest[2]} for {highest[0]}')
     return highest[0]
 
 # ! [10/02/2020 0:24AM GMT+7]: Not sure how accurate is this
@@ -279,7 +281,7 @@ def findTarget(match, options):
                 _confidence -= len(conFil) + 5
         result.append(_result)
         confidence.append(_confidence)
-        print(f'[  ] Score {_confidence}: {_result}')
+        print(f'[  ] Confidence {_confidence}: {_result}')
         if _confidence < confidence[-1]:
             if len(result) > 1 and confidence[-2] < confidence[-1]:
                 return result[-1]
