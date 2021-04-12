@@ -1,4 +1,4 @@
-import os, ast, re, configparser, itertools, shutil, zipfile, random
+import os, ast, re, configparser, itertools, shutil, zipfile, random, time
 from sys import exit as sys_exit
 
 # ANCHOR: Aditional lib
@@ -131,7 +131,12 @@ def makeDirBackup(pathTarget, dst=f'{userHomeDir}\\Desktop', archiveName='Start 
     print(f'[>>] Backup: {pathTarget} as {archiveFullName}')
     try:
         os.chdir(pathTarget)
+        # * Write note
+        with open("readme.txt", "a") as readmeFile:
+            readmeFile.write(f"Backup from:\n{os.getcwd()}")
         os.chdir('..')
+        print(os.listdir())
+        # shutil.copyfile()
         with zipfile.ZipFile(f'{archiveFullName}', 'w') as zipObj:
             for root, dirs, filenames in os.walk(pathTarget):
                 for file in filenames:
@@ -196,9 +201,11 @@ def moveShortCut(file, location, move_up=True, newName=None):
                 os.rename(file, f'{location}/{newName}')
         except FileExistsError:
             print(f'[! ] Error: File {file} already exist inside target location\n[>>]\tReplacing with the newest one')
-            if os.stat(file).st_mtime < os.stat(f'{location}/{newName}').st_mtime and move_up:
+            if (os.stat(file).st_mtime < os.stat(f'{location}/{newName}').st_mtime) and move_up:
+                os.remove(f'{file}')
                 os.rename(f'{location}/{file}', newName)
-            elif os.stat(file).st_mtime > os.stat(f'{location}/{newName}').st_mtime and not move_up:
+            elif (os.stat(file).st_mtime > os.stat(f'{location}/{newName}').st_mtime) and not move_up:
+                os.remove(f'{location}/{file}')
                 os.rename(file, f'{location}/{newName}')
         except TypeError:
             return False
@@ -249,9 +256,18 @@ def moveAll(files, move_up=True, rename=True):
             except NotADirectoryError:
                 continue
 
+# ! [12 Apr 2021 4:35PM GMT+7]: I'm not sure if this scoring method is accurate enough
 def findMatch(match, options):
     results = []
     print(f'[>>] Matching item with folder name: \'{match}\'')
+    # ? Separating program name with its version number
+    try:
+        separateNameAndVersion = re.match(r"(.+)\s([\d.]+)", match)
+        match = separateNameAndVersion[1]
+        # programVersion = separateNameAndVersion[2]
+        print(f'[i ] Extracted program name from folder name: \'{match}\'')
+    except TypeError or IndexError:
+        pass
     for item in options:
         itemName = re.match(r"(.+)[.]{1}[a-zA-Z]+$", item)[1]
         ratio = fuzz.ratio(match, itemName)
@@ -269,7 +285,7 @@ def findMatch(match, options):
     print(f'[>>] Highest:\t{highest[2]} for {highest[0]}')
     return highest[0]
 
-# ! [10/02/2020 0:24AM GMT+7]: Not sure how accurate is this
+# ! [10 Feb 2020 0:24AM GMT+7]: Not sure how accurate is this
 def findTarget(match, options):
     result = []
     confidence = []
@@ -326,8 +342,11 @@ def moveWork(target):
     filesOnCurrentDir = getFileFolderList()
 
 def exitProgram():
+    print("\n[  ] Press Enter to exit\n")
+    input()
     exitMsg = random.choice(exitStr)
     print(f'\n\t{exitMsg}\n')
+    time.sleep(1)
     sys_exit()
 
 def cleanStartCut(dir):
@@ -357,7 +376,7 @@ if __name__ == '__main__':
         while needConfirm:
             for i in range(len(StartDir)):
                 print(f'[  ] dir {i + 1}: {StartDir[i]}')
-            runConfirm = input('[<<] Confirm: Clean up your Start Menu folder [Y/n] ? ').lower()
+            runConfirm = input('[<<] Confirm: Clean up your Start Menu folder, which has listed above? [Y/n] ? ').lower()
             if runConfirm == 'y' or runConfirm == '':
                 needConfirm = False
             elif runConfirm == 'n':

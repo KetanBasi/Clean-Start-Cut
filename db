@@ -23,6 +23,15 @@
             'FolderName': 'Core Temp',
             'Target': ['Core Temp.lnk']
         },
+        'CPUID CPU-Z': {
+            'FolderName': 'CPU-Z',
+            'Target': ['CPU-Z.lnk', 'Edit CPU-Z Config File.lnk'],
+            'NewName': ['CPU-Z.lnk', 'CPU-Z Edit Config File.lnk']
+        },
+        'CPUID HWMonitorPro': {
+            'FolderName': 'HWMonitorPro',
+            'Target': ['HWMonitorPro.lnk']
+        },
         'Dead Cells The Bad Seed': {
             'FolderName': 'Dead Cells The Bad Seed',
             'Target': ['Dead Cells The Bad Seed.lnk']
@@ -48,6 +57,11 @@
             'Target': ['Configure IP Camera Adapter.lnk'],
             'NewName': ['IP Camera Configure.lnk']
         },
+        'LibreOffice': {
+            'FolderName': 'LibreOffice [%version%]',
+            'Target': ['Mendeley Desktop.lnk'],
+            'NewName': ['Mendeley.lnk']
+        },
         'Mendeley': {
             'FolderName': 'Mendeley Desktop',
             'Target': ['Mendeley Desktop.lnk'],
@@ -56,11 +70,6 @@
         'MongoDB': {
             'FolderName': 'MongoDB',
             'Target': ['MongoDB Compass.lnk']
-        },
-        'VirtualBox': {
-            'FolderName': 'Oracle VM VirtualBox',
-            'Target': ['Oracle VM VirtualBox.lnk'],
-            'NewName': ['VirtualBox.lnk']
         },
         'Plagiarism Checker X': {
             'FolderName': 'Plagiarism Checker X',
@@ -128,6 +137,11 @@
             'FolderName': 'Visual Studio Code',
             'Target': ['Visual Studio Code.lnk']
         },
+        'VirtualBox': {
+            'FolderName': 'Oracle VM VirtualBox',
+            'Target': ['Oracle VM VirtualBox.lnk'],
+            'NewName': ['VirtualBox.lnk']
+        },
         'WhoCrashed': {
             'FolderName': 'WhoCrashed',
             'Target': ['WhoCrashed.lnk']
@@ -152,7 +166,6 @@
             'Cinema 4D': 'Maxon',
             'Node.js': 'Node.js',
             'Reaper': 'REAPER (x64)',
-            'SWI-Prolog 8.2.1': 'SWI-Prolog 8.2.1',
             'USB PC Camera': 'USB PC Camera',
             'VoiceMeeter': 'VB Audio',
             'Virtual Audio Cable': 'Virtual Audio Cable',
