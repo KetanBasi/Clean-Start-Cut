@@ -26,15 +26,17 @@ Install FuzzyWuzzy:
 Usually, `pip install` on Windows and `pip3 install` on Linux.
 
 ## FAQ
-Currently, if you want to restore every change this program has already done, you only can do it manually. See the "FAQ" section below.
 
 Q: How can I use this app? Can I double-click that "Clean Start-Cut.py"?
+
 A: I will make the executable later when it is ready for release. For now, you can install [Python 3](https://python.org) and some marked modules listed above manually to try it.
 
 Q: When will it be ready for release?
+
 A: I will announce it on my Instagram and Twitter account, and my blog page. You can find it on the About page on [my blog page here](https://s.id/iketan).
 
 Q: I have already used your program directly on my computer without testing it first, and now I want to restore it. How can I do that?
+
 A: Yes, you can. This program, by default, makes a backup copy as a zip file and stores it on your Desktop. The file name should look like "Start Menu Backup.zip," and you can see the readme.txt file inside it to know where to extract it.
 
 ## Changelog
